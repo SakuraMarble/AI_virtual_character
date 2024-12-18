@@ -195,3 +195,78 @@ setInterval(changeBackground, 5000);
 
 // 初始背景设置
 changeBackground();
+
+
+
+
+
+// 获取侧边栏、按钮和主内容区域
+const sidebar = document.getElementById('sidebar');
+const toggleSidebarButton = document.getElementById('toggleSidebarButton');
+const main = document.querySelector('main');
+const inputContainer = document.querySelector('.input-container');
+const header = document.querySelector('header');
+
+// 点击按钮时切换侧边栏显示/隐藏
+toggleSidebarButton.addEventListener('click', () => {
+  // 切换侧边栏的显示状态
+  sidebar.classList.toggle('open'); // 切换 'open' 类，控制侧边栏滑动
+  main.classList.toggle('sidebar-open'); // 切换 'sidebar-open' 类，调整主内容区域
+  
+  // 切换按钮的状态
+  toggleSidebarButton.classList.toggle('open'); // 切换按钮状态
+  
+  // 控制聊天框和输入框的交互状态
+  if (sidebar.classList.contains('open')) {
+    header.classList.add('blocked');
+    chatContainer.classList.add('blocked');  // 当侧边栏打开时禁用聊天框
+    inputContainer.classList.add('blocked'); // 当侧边栏打开时禁用输入框
+  } else {
+    header.classList.remove('blocked');
+    chatContainer.classList.remove('blocked');  // 当侧边栏关闭时恢复聊天框
+    inputContainer.classList.remove('blocked'); // 当侧边栏关闭时恢复输入框
+  }
+});
+
+
+
+// 监听 "确定修改" 按钮的点击事件
+document.getElementById('submitButton').addEventListener('click', function () {
+  // 获取表单中的输入值
+  const nickname = document.getElementById('nickname').value;
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+  const personality = document.getElementById('personality').value;
+  const hobbies = document.getElementById('hobbies').value;
+  const voice = document.getElementById('voice').files[0];
+  const appearance = document.getElementById('appearance').files[0];
+  const specialRequests = document.getElementById('specialRequests').value;
+
+  // 使用 FormData 发送数据（包括文件）
+  const formData = new FormData();
+  formData.append('nickname', nickname);
+  formData.append('gender', gender);
+  formData.append('personality', personality);
+  formData.append('hobbies', hobbies);
+  formData.append('voice', voice);
+  formData.append('appearance', appearance);
+  formData.append('specialRequests', specialRequests);
+
+  // 发送数据到服务器
+  fetch('/api/updateUserInfo', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Server response:', data);
+    alert('修改成功！');
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('提交失败');
+  });
+});
+
+
+
+

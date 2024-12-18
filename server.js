@@ -3,7 +3,9 @@ const app = express();
 const path = require('path');
 const port = 5000;
 const cors = require('cors');
+const multer = require('multer');
 const { ZhipuAI } = require('zhipuai-sdk-nodejs-v4');
+const upload = multer({ dest: 'uploads/' });  // 设置上传文件的存储目录
 
 app.use(cors());
 
@@ -12,6 +14,17 @@ app.use(express.json());
 
 // 提供静态文件
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 全局用户信息对象
+let userInfo = {
+  nickname: '',
+  gender: '',
+  personality: '',
+  hobbies: '',
+  voice: null,
+  appearance: null,
+  specialRequests: ''
+};
 
 // 处理用户输入并生成响应
 app.post('/api/respond', async (req, res) => {
@@ -53,6 +66,37 @@ app.post('/api/respond', async (req, res) => {
     console.error('AI生成响应失败:', error);
     res.status(500).json({ error: '生成响应时出错' });
   }
+});
+
+// 处理包含多个文件字段的表单
+app.post('/api/updateUserInfo', upload.fields([
+  { name: 'voice', maxCount: 1 },  // 处理单个 voice 文件
+  { name: 'appearance', maxCount: 1 }  // 处理单个 appearance 文件
+]), (req, res) => {
+  const { nickname, gender, personality, hobbies, specialRequests } = req.body; // 获取普通文本字段
+  const voice = req.files?.voice ? req.files.voice[0] : null;  // 获取上传的 voice 文件
+  const appearance = req.files?.appearance ? req.files.appearance[0] : null;  // 获取上传的 appearance 文件
+
+  console.log('用户昵称:', nickname);
+  console.log('用户性别:', gender);
+  console.log('用户性格:', personality);
+  console.log('用户兴趣:', hobbies);
+  console.log('上传的声音文件:', voice);
+  console.log('上传的外形文件:', appearance);
+
+  // 更新全局的 userInfo 对象
+  userInfo = {
+    ...userInfo,
+    nickname,
+    gender,
+    personality,
+    hobbies,
+    voice,
+    appearance,
+    specialRequests
+  };
+
+  res.json({ message: '用户信息更新成功', userInfo });
 });
 
 // 启动服务
