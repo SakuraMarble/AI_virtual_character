@@ -1,0 +1,151 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f3f4f6;
+  color: #333;
+}
+
+header {
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.8), rgba(123, 0, 255, 0.8));
+  color: white;
+  padding: 20px 0;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #fdfdfd;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-color 1s ease-in-out, background-image 1s ease-in-out;
+}
+
+.chat-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+}
+
+
+.message {
+  display: flex;
+  align-items: flex-end;
+  margin: 10px 0;
+  z-index: 2;  /* 确保消息气泡位于遮罩层上方 */
+}
+
+.message.user {
+  flex-direction: row-reverse;
+}
+
+.message .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 10px;
+}
+
+.message .content {
+  max-width: 70%;
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.message.user .content {
+  background-color: #007bff;
+  color: white;
+  border-bottom-right-radius: 0;
+}
+
+.message.server .content {
+  background-color: #eaeaea;
+  color: #333;
+  border-bottom-left-radius: 0;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: #888;
+  margin-top: 5px;
+}
+
+.input-container {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #ddd;
+  background-color: white;
+}
+
+.input-container textarea {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  height: 150px;
+  transition: border-color 0.3s ease;
+}
+
+.input-container textarea:focus {
+  border-color: #007bff;
+}
+
+.input-container button {
+  margin-left: 15px;
+  padding: 12px 25px;
+  font-size: 16px;
+  background: linear-gradient(135deg, #007bff, #6a1b9a);  /* 渐变背景 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.input-container button:hover {
+  background: linear-gradient(135deg, #0056b3, #8e24aa);  /* 按钮悬停时的渐变效果 */
+  transform: scale(1.05);  /* 放大效果 */
+}
+
+.input-container button:active {
+  background: linear-gradient(135deg, #004080, #7b1fa2);  /* 按钮点击时的渐变效果 */
+  transform: scale(0.95);  /* 缩小效果 */
+}
