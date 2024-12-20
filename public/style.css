@@ -289,3 +289,9 @@ header {
   pointer-events: none; /* 禁止用户点击 */
   opacity: 0.3; /* 设置透明度 */
 }
+
+.audio-player {
+  width: 200px;  /* 控制音频条的宽度 */
+  height: 30px;  /* 控制音频条的高度 */
+  background-color: #f0f0f0; /* 可选，设置背景色 */
+}

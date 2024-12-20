@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marble的AI伴侣</title>
+
   <link rel="stylesheet" href="style.css"> <!-- 引用外部 CSS 文件 -->
   <link rel="icon" href="image/logo.webp" type="image/x-icon">
 </head>
@@ -28,7 +29,6 @@
         <label for="female">女</label>
       </div><br>
 
-
       <label for="personality">性格：</label>
       <input type="text" id="personality" name="personality" placeholder="请输入性格"><br>
 
@@ -38,13 +38,19 @@
       <label for="voice">声音：</label>
       <input type="file" id="voice" name="voice" accept="audio/*"><br>
 
+      <label for="voicePrompt">声音提示词：</label>
+      <input type="text" id="voicePrompt" name="voicePrompt" placeholder="请输入声音提示词"><br>
+
       <label for="appearance">外形：</label>
       <input type="file" id="appearance" name="appearance" accept="image/*"><br>
+
+      <label for="appearancePrompt">形象提示词：</label>
+      <input type="text" id="appearancePrompt" name="appearancePrompt" placeholder="请输入形象提示词"><br>
 
       <label for="specialRequests">特殊要求：</label>
       <textarea id="specialRequests" name="specialRequests" placeholder="请输入特殊要求"></textarea><br>
 
-      <button type="button" id="submitButton">确定修改</button> <!-- 确定修改按钮 -->
+      <button type="button" id="submitButton">确定提交</button> <!-- 确定修改按钮 -->
     </form>
   </div>
 

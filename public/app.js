@@ -14,7 +14,8 @@ function getCurrentTime() {
 }
 
 // 添加消息到聊天窗口
-function addMessage(content, type) {
+function addMessage(content='', type, isAudio = false, audioUrl = '') {
+  console.log("enter");
   const messageDiv = document.createElement('div');
   messageDiv.classList.add('message', type);
 
@@ -24,7 +25,15 @@ function addMessage(content, type) {
 
   const contentDiv = document.createElement('div');
   contentDiv.classList.add('content');
-  contentDiv.textContent = content;
+  if (isAudio) {
+    const audioElement = document.createElement('audio');
+    audioElement.controls = true;
+    audioElement.src = audioUrl + '?t=' + new Date().getTime(); // 设置音频链接
+    audioElement.classList.add('audio-player');
+    contentDiv.appendChild(audioElement);
+  } else {
+    contentDiv.textContent = content;
+  }
 
   const timestampDiv = document.createElement('div');
   timestampDiv.classList.add('timestamp');
@@ -39,6 +48,7 @@ function addMessage(content, type) {
   // 自动滚动到底部
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
+
 
 // 创建 Web Worker 实例
 const worker = new Worker('worker.js');
@@ -60,61 +70,89 @@ worker.onmessage = function (e) {
   }
 };
 
+function getVoiceResponse() {
+  const probability = 0.5;  // 50%的概率请求语音回复
+  return Math.random() < probability;
+}
+
 // 发送消息
 sendButton.addEventListener('click', () => {
   const userInput = inputText.value.trim();
   if (!userInput) return;
-
   // 显示用户消息
   addMessage(userInput, 'user');
   inputText.value = '';
+  const isVoice = getVoiceResponse();
+  
+  if(!isVoice) {
+    // 发送请求到服务端
+    fetch('http://10.77.110.170:5000/api/respond', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: userInput}),
+    })
+      .then((response) => {
+        currentMessageDiv = null;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-  // 发送请求到服务端
-  fetch('http://10.77.110.170:5000/api/respond', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text: userInput }),
-  })
-    .then((response) => {
-      currentMessageDiv = null;
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+        // 逐步读取流中的数据
+        reader.read().then(function processText({ done, value }) {
+          if (done) return;
 
-      // 逐步读取流中的数据
-      reader.read().then(function processText({ done, value }) {
-        if (done) return;
+          // 解码流数据
+          let now_read = decoder.decode(value, { stream: true });
+          now_read = now_read.replace(/data: /g, '');
+          let json_array = now_read.split(/\n\s*\n/);
 
-        // 解码流数据
-        let now_read = decoder.decode(value, { stream: true });
-        now_read = now_read.replace(/data: /g, '');
-        let json_array = now_read.split(/\n\s*\n/);
-
-        try {
-          for (let i = 0; i < json_array.length; i++) {
-            if (json_array[i] === '[DONE]' || json_array[i].length === 0) break;
-            const parsedData = JSON.parse(json_array[i]);
-            if (parsedData && parsedData.choices && parsedData.choices[0].delta) {
-              const aiContent = parsedData.choices[0].delta.content;
-              if (aiContent) {
-                // 将新消息加入到队列
-                worker.postMessage({ action: 'enqueue', data: aiContent });
+          try {
+            for (let i = 0; i < json_array.length; i++) {
+              if (json_array[i] === '[DONE]' || json_array[i].length === 0) break;
+              const parsedData = JSON.parse(json_array[i]);
+              if (parsedData && parsedData.choices && parsedData.choices[0].delta) {
+                const aiContent = parsedData.choices[0].delta.content;
+                if (aiContent) {
+                  // 将新消息加入到队列
+                  worker.postMessage({ action: 'enqueue', data: aiContent });
+                }
               }
             }
+          } catch (error) {
+            console.error('JSON解析错误:', error);
           }
-        } catch (error) {
-          console.error('JSON解析错误:', error);
-        }
 
-        // 继续读取数据流
-        reader.read().then(processText);
+          // 继续读取数据流
+          reader.read().then(processText);
+        });
+      })
+      .catch((error) => {
+        console.error('请求失败:', error);
+        addMessage('请求失败，请稍后再试。', 'server');
       });
-    })
-    .catch((error) => {
-      console.error('请求失败:', error);
-      addMessage('请求失败，请稍后再试。', 'server');
+  } else {
+    // 发送请求到服务端
+    fetch('http://10.77.110.170:5000/api/respondVoice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: userInput })
+    }).then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        const audiourl = data.audiourl;
+        console.log("Get response: ", audiourl);
+        // 处理收到的音频文件的url
+        addMessage('','server',true,audiourl);
+      } else {
+          console.error('Error:', data.message);
+      }
+    }).catch(error => {
+      console.error('Request failed', error);
     });
+  }
 });
 
 // 打字机效果
@@ -239,6 +277,8 @@ document.getElementById('submitButton').addEventListener('click', function () {
   const hobbies = document.getElementById('hobbies').value;
   const voice = document.getElementById('voice').files[0];
   const appearance = document.getElementById('appearance').files[0];
+  const voicePrompt = document.getElementById('voicePrompt').value;  // 获取声音提示词
+  const appearancePrompt = document.getElementById('appearancePrompt').value;  // 获取形象提示词
   const specialRequests = document.getElementById('specialRequests').value;
 
   // 使用 FormData 发送数据（包括文件）
@@ -249,6 +289,8 @@ document.getElementById('submitButton').addEventListener('click', function () {
   formData.append('hobbies', hobbies);
   formData.append('voice', voice);
   formData.append('appearance', appearance);
+  formData.append('voicePrompt', voicePrompt);  // 添加声音提示词
+  formData.append('appearancePrompt', appearancePrompt);  // 添加形象提示词
   formData.append('specialRequests', specialRequests);
 
   // 发送数据到服务器
@@ -266,6 +308,7 @@ document.getElementById('submitButton').addEventListener('click', function () {
     alert('提交失败');
   });
 });
+
 
 
 
