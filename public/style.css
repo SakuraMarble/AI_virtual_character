@@ -162,14 +162,33 @@ main {
   position: fixed;
   top: 0;
   left: -255px; /* 初始位置在左侧外面 */
-  width: 250px; /* 侧边栏宽度 */
+  width: 250px;
   height: 100%;
-  background: linear-gradient(135deg, rgba(0, 123, 255, 1), rgba(123, 0, 255, 1)); /* 渐变背景 */
+  overflow-y: auto; /* 添加纵向滚动条 */
+  background: linear-gradient(135deg, rgba(0, 123, 255, 1), rgba(123, 0, 255, 1));
   color: white;
   padding: 20px;
-  transition: transform 0.3s ease; /* 添加过渡动画 */
-  z-index: 999; /* 确保侧边栏的层级低于按钮 */
+  transition: transform 0.3s ease;
+  z-index: 999;
+  scrollbar-width: thin; /* 针对 Firefox 设置滚动条宽度 */
+  scrollbar-color: #888 #444; /* 针对 Firefox 设置滚动条颜色 */
+  -webkit-overflow-scrolling: touch; /* 允许在移动设备上实现惯性滚动 */
 }
+
+/* 针对 Webkit 浏览器的滚动条样式 */
+.sidebar::-webkit-scrollbar {
+  width: 8px; /* 滚动条宽度 */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: #888; /* 滚动条滑块颜色 */
+  border-radius: 4px; /* 圆角效果 */
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background-color: #444; /* 滚动条轨道颜色 */
+}
+
 
 .sidebar h2 {
   margin-top: 0;
