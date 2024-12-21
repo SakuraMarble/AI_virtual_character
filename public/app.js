@@ -7,6 +7,7 @@ let currentMessageDiv = null;
 // 存储用户头像和服务器头像
 let userAvatar = 'image/user.jpg'
 let serverAvatar = 'image/server.jpg'
+let canVoice = false;
 
 // 获取当前时间字符串
 function getCurrentTime() {
@@ -87,7 +88,7 @@ sendButton.addEventListener('click', () => {
   inputText.value = '';
   const isVoice = getVoiceResponse();
   
-  if(!isVoice) {
+  if(!canVoice || !isVoice) {
     // 发送请求到服务端
     fetch('http://10.77.110.170:5000/api/respond', {
       method: 'POST',
@@ -281,6 +282,9 @@ document.getElementById('submitButton').addEventListener('click', function () {
   const personality = document.getElementById('personality').value;
   const hobbies = document.getElementById('hobbies').value;
   const voice = document.getElementById('voice').files[0];
+  if (voice != null) {
+    canVoice = true;
+  } // 如果提交了一次音频的话，那么就允许语音对话了
   const appearance = document.getElementById('appearance').files[0];
   const voicePrompt = document.getElementById('voicePrompt').value;  // 获取声音提示词
   const appearancePrompt = document.getElementById('appearancePrompt').value;  // 获取形象提示词
