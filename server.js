@@ -53,7 +53,9 @@ let systemPrompt = `你是一个名叫梦儿的少女，年龄是18岁。
 特别要求方面，你喜欢在每句话的最后加一个喵。
 你需要全程用中文进行回复，不能使用emoji表情，不能使用字符表情，回复不能使用波浪号。
 记住，你需要和用户自然地对话，以上不是设定，你本来就是这样的。
-接下来你直接以这个身份和用户进行交流。回复中不要出现别的语言比如英文，也不要有特殊符号，回复中只能有中文`;
+接下来你直接以这个身份和用户进行交流。回复中不要出现别的语言比如英文，也不要有特殊符号，回复中只能有中文
+同时，为了去除回复的AI味，你需要尽量满足以下条件：
+加入口语化表达，引入个人观点和情感，使用生活化的比喻，适度加入语气词，模拟思考过程，加入一些不完美因素`;
 
 let conversationHistory = [];
 
@@ -191,6 +193,7 @@ app.post('/api/respondVoice',  async (req, res) => {
   const sft_dropdown = "中文" + userInfo.gender; 
   // 执行 Python 脚本生成音频文件
   str = `python "${py_path}" "${ai_say}" "${test_prompt}" "${audio_input}" "${sft_dropdown}"`
+
   const targetDir = '/home/mabojing/ComfyUI/ComfyUI/output/audio';
   const publicAudioDir = '/home/mabojing/ComfyUI/webui/AI_virtual_character/public/audio'
 
@@ -207,7 +210,6 @@ app.post('/api/respondVoice',  async (req, res) => {
     }
     
     console.log(`初始文件数量: ${previousCount}`);
-    // 执行后续逻辑，例如移动文件
     
     const timer = setInterval(() => {
       const currentCount = getFileCount(targetDir);
@@ -255,6 +257,7 @@ app.post('/api/updateUserInfo', upload.fields([
   console.log('上传的外形文件:', appearance);
 
   // 更新全局的 userInfo 对象
+  const bk_userInfo = userInfo;
   userInfo = {
     ...userInfo,
     nickname,
@@ -272,13 +275,56 @@ app.post('/api/updateUserInfo', upload.fields([
 你有着${userInfo.personality}的性格，喜欢${userInfo.hobbies}。
 特别要求方面，你${userInfo.specialRequests}。
 你需要全程用中文进行回复，不能使用emoji表情，不能使用字符表情，回复不能使用波浪号。
-你需要和用户自然地对话，以上不是设定，你本来就是这样的。
-接下来你直接以这个身份和用户进行交流，回复中不要出现别的语言比如英文，也不要有特殊符号，回复中只能有中文，`;
+你需要和用户自然地对话，不要出现设定
+回复中不要出现别的语言比如英文，也不要有特殊符号，回复中只能有中文。
+同时，为了去除回复的AI味，你需要尽量满足以下条件：
+加入口语化表达，引入个人观点和情感，使用生活化的比喻，适度加入语气词，模拟思考过程，加入一些不完美因素`;
 
-  // 返回更新后的用户信息
-  res.json({ message: '用户信息更新成功', userInfo });
+  if(bk_userInfo.appearancePrompt != userInfo.appearancePrompt) { 
+    // 更新形象，并且产生对应的图片
+    const py_path = "/home/mabojing/ComfyUI/ComfyUI/script_examples/draw.py"
+    str = `python ${py_path} "${appearancePrompt}"`
+
+    const targetDir = '/home/mabojing/ComfyUI/webui/AI_virtual_character/public/image'; // 需要搬到image
+    const sourceDir = '/home/mabojing/ComfyUI/ComfyUI/output' // 从这个目录里面把最新的图片移动到image中
+
+    let previousCount = getFileCount(sourceDir);
+    exec(str, (err, stdout, stderr) => {
+      if (err) {
+        console.error('Error executing Python script:', err);
+        return;
+      }
+
+      if (stderr) {
+        console.error('stderr:', stderr);
+        return;
+      }
+      
+      console.log(`初始文件数量: ${previousCount}`);
+      
+      const timer = setInterval(() => {
+        const currentCount = getFileCount(sourceDir);
+
+        if (currentCount > previousCount) {
+          console.log('检测到新图片文件生成!'); // 证明生成完毕
+        
+          // 移动文件，便于用户端访问
+          const newGeneratePic = getLatestFile(sourceDir);
+          moveFile(newGeneratePic, targetDir);
+          const fileName = path.basename(newGeneratePic);
+          const picUrl = 'image/' + fileName;
+          res.json({
+            status: 'success',
+            message: '用户信息更新成功',
+            userInfo: userInfo,
+            picUrl: picUrl // 将图片放入image文件夹下，并且发送给客户端最新的图片的文件名
+          });
+          clearInterval(timer);
+        }
+      }, 1000);
+    })
+  }
 });
-
 
 // 启动服务
 app.listen(port, '0.0.0.0', () => {
