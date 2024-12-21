@@ -282,14 +282,27 @@ document.getElementById('submitButton').addEventListener('click', function () {
   const personality = document.getElementById('personality').value;
   const hobbies = document.getElementById('hobbies').value;
   const voice = document.getElementById('voice').files[0];
-  if (voice != null) {
-    canVoice = true;
-  } // 如果提交了一次音频的话，那么就允许语音对话了
   const appearance = document.getElementById('appearance').files[0];
   const voicePrompt = document.getElementById('voicePrompt').value;  // 获取声音提示词
   const appearancePrompt = document.getElementById('appearancePrompt').value;  // 获取形象提示词
   const specialRequests = document.getElementById('specialRequests').value;
 
+  if (voice != null) {
+    canVoice = true;
+  } // 如果提交了一次音频的话，那么就允许语音对话了
+
+  // 校验必填字段
+  if (!nickname || !gender || !personality || !hobbies || !voice || !voicePrompt || !appearancePrompt || !specialRequests) {
+    alert('请填写所有必填字段（外形文件除外）。');
+    return; // 停止提交
+  }
+
+  // 校验外形提示词是否为英文
+  const englishRegex = /^[a-zA-Z\s.,!?-]+$/; // 允许字母、空格和常见标点符号
+  if (!englishRegex.test(appearancePrompt)) {
+    alert('外形提示词必须为英文！');
+    return; // 停止提交
+  }
   // 显示加载中的提示
   const loadingOverlay = document.createElement('div');
   loadingOverlay.id = 'loadingOverlay';
